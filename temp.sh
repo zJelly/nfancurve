@@ -5,9 +5,10 @@ echo "###################################"
 echo
 
 # Editable variables
-declare -a fcurve=( "25" "40" "55" "70" "85" ) # Fan speeds
-declare -a tcurve=( "35" "45" "50" "55" "60" ) # Temperatures
-# ie - when temp<=35 degrees celsius the fan speed=25%
+gpuid=1 # look in /sys/class/hwmon, find the right number. mine is hwmon1, so the gpuid is 1.
+declare -a fcurve=( "76" "86" "95" "108" "128" "255" ) # Fan speeds (multiply percentage by 2.55 and take closest integer, amdgpu takes fanspeed as a 0-255 value)
+declare -a tcurve=( "35" "43" "50" "58" "65" "90" ) # Temperatures
+# ie - when temp<=35 degrees celsius the fan speed=84
 
 # Variable initialisation (so don't change these)
 gpu=0
@@ -21,8 +22,10 @@ speed=${fcurve[0]}
 clen=$[ ${#fcurve[@]} - 1 ]
 declare -a diff_curve=()
 declare -a diff_c2=()
+hwpath="/sys/class/hwmon/hwmon"
 
 # Make sure the variables are back to normal
+# changed set_fan_control to 2 (auto)
 function finish {
 	unset gpu
 	unset temp
@@ -38,26 +41,25 @@ function finish {
 	unset tcurve
 	unset fcurve
 	unset eles
-	unset ver
 	unset diffr
 	unset hashes
+	unset gpuid
+	unset hwpath
 	echo -e "\nSuccessfully caught exit & cleared variables!"
-	set_fan_control 0
+	set_fan_control 2
 	echo -e "\nFan control set back to auto mode."
 }
 trap finish EXIT
 
 # Check driver version
+# compare hwpath name string to known value
 function check_driver {
-	ver=`nvidia-settings -v`
-	# Just a guess... I don't really know the right version
-	if [ "${ver:27:3}" -lt "304" ]; then
-		echo "You're using an old and unsupported driver, please upgrade it."
+	if ! [ "$(cat $hwpath$gpuid/name)" == 'amdgpu' ]; then
+		echo "You're not using amdgpu, or your gpuid is not set correctly"
 		exit
 	else
 		echo "A likely supported driver version was detected."
 	fi
-	unset ver
 }
 
 # Check that the curves are the same length
@@ -79,16 +81,19 @@ function get_abs_tdiff {
 	fi
 }
 
-# This looked ugly when it was a lone command in the while loop
+# gotta divide temp readout by 1000 to get celsius value
+# i think nvidia-settings returns a celsius integer
 function get_temp {
-	temp=`nvidia-settings -q=[gpu:"$gpu"]/GPUCoreTemp -t`
+	temp=`cat $hwpath$gpuid/temp1_input`
+	temp=("$[ $temp / 1000]")
 }
 
 # This function is the biggest calculation in this script (use it sparingly)
+# change speed=100 to speed=255
 function get_speed {
         # Execution of fan curve
 	if [ "$temp" -gt "$[ ${tcurve[-1]} + 10 ]" ]; then
-                speed="100"
+                speed="255"
         else
                 # Get a new speed from curve
                 for i in `seq 0 $clen`; do
@@ -102,8 +107,10 @@ function get_speed {
 }
 
 # Enable/disable fan control (if CoolBits is enabled) - see USAGE.md
+# for amdgpu: 0=full on 1=manual, 2=auto
 function set_fan_control {
-	nvidia-settings -a "[gpu:""$gpu""]/GPUFanControlState="$1
+	echo $1 > $hwpath$gpuid/pwm1_enable
+	echo "sending $1 to pwm1_enable"
 }
 
 # diff curves are the difference in fan-curve temps for better slp changes
@@ -117,9 +124,11 @@ function set_diffs {
 }
 
 # Function to contain the nvidia-settings command for changing speed
+# send it to hwpath instead
 function set_speed {
 	if ! [ "$1" -eq "$2" ]; then
-		nvidia-settings -a "[fan:0]/GPUTargetFanSpeed=""$1"
+		echo $1 > $hwpath$gpuid/pwm1
+		echo "sending $1 to pwm1"
 	fi
 }
 
@@ -144,6 +153,8 @@ function main {
 			get_speed
 			set_speed $speed $old_speed
 			old_temp=$temp
+			echo "old_temp old_speed speed temp"
+			echo "$old_temp       $old_speed       $speed    $temp"
 			slp=3
 		elif [ "$tdiff" -ge "${diff_c2[$eles]}" ]; then
 			slp=5
