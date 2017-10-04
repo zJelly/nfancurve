@@ -2,10 +2,11 @@
 **Must be run as root, this script writes to /sys/class/hwmon/hwmonX/pwm1**
 
 A fan control script for amdgpu users, based off nan0s7's nfancurve
+The fan control occurs in steps, please use several points to avoid sudden ramping-up.
 
 ## Features
-- by default it has a gradual fan curve profile (my GPU is watercooled, but the VRMs need their own fan)
-- automatically enables GPU fan control
+- by default it has a severe fan curve profile, you should probably change it
+- automatically controls GPU fan according to the curve
 - easy to read code, with plentiful comments (beginner friendly)
 - "intelligently" adjusts the time between tempurature readings
 - very lightweight
@@ -21,4 +22,4 @@ A fan control script for amdgpu users, based off nan0s7's nfancurve
 - Run `./temp.sh` as root
 - This script does not take arguments, but has editable variables at the top of the script.
 
-To run in the background, use this command as root: `sh -c 'nohup ./temp.sh >/dev/null 2>&1 &'`
+To run in the background, use this command as root: `nohup bash -c './temp.sh' >/dev/null 2>&1 &`
