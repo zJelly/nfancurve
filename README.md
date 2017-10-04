@@ -2,6 +2,7 @@
 **Must be run as root, this script writes to /sys/class/hwmon/hwmonX/pwm1**
 
 A fan control script for amdgpu users, based off nan0s7's nfancurve
+
 The fan control occurs in steps, please use several points to avoid sudden ramping-up.
 
 ## Features
