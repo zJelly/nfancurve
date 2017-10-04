@@ -22,4 +22,4 @@ The fan control occurs in steps, please use several points to avoid sudden rampi
 - Run `./temp.sh` as root
 - This script does not take arguments, but has editable variables at the top of the script.
 
-To run in the background, use this command as root: `nohup bash -c './temp.sh' >/dev/null 2>&1 &`
+To run in the background, use this command as root: `nohup ./temp.sh >/dev/null 2>&1 &`
