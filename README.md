@@ -16,7 +16,7 @@ A fan control script for amdgpu users, based off nan0s7's nfancurve
 - amdgpu driver
 
 ## How to use
-- Find your GPU's hwmon number and edit gpuid in the script to match
+- Find your GPU's `hwmon` number and edit `gpuid` in the script to match (there is a short howto at the top of the script)
 - `chmod +x temp.sh`
 - Run `./temp.sh` as root
 - This script does not take arguments, but has editable variables at the top of the script.
