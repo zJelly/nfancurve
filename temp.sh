@@ -5,7 +5,7 @@ echo "###################################"
 echo
 
 # Editable variables
-gpuid=1 # look in /sys/class/hwmon, find the right number. mine is hwmon1, so the gpuid is 1.
+gpuid=1 # look in /sys/class/hwmon, find the right number for your gpu. mine is hwmon1, so the gpuid is 1.
 declare -a fcurve=( "76" "86" "95" "108" "128" "255" ) # Fan speeds (multiply percentage by 2.55 and take closest integer, amdgpu takes fanspeed as a 0-255 value)
 declare -a tcurve=( "35" "43" "50" "58" "65" "90" ) # Temperatures
 # ie - when temp<=35 degrees celsius the fan speed=84
@@ -27,6 +27,8 @@ hwpath="/sys/class/hwmon/hwmon"
 # Make sure the variables are back to normal
 # changed set_fan_control to 2 (auto)
 function finish {
+	echo 2 > $hwpath$gpuid/pwm1_enable
+	echo -e "\nFan control set back to auto mode."
 	unset gpu
 	unset temp
 	unset old_temp
@@ -46,8 +48,6 @@ function finish {
 	unset gpuid
 	unset hwpath
 	echo -e "\nSuccessfully caught exit & cleared variables!"
-	set_fan_control 2
-	echo -e "\nFan control set back to auto mode."
 }
 trap finish EXIT
 
