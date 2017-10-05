@@ -12,7 +12,7 @@ sudo chmod 755 /etc/nfancurve-amd/temp.sh
 ```
 Create a systemd service:
 ```
-touch /etc/systemd/system/nfancurve-amd.service
+sudo touch /etc/systemd/system/nfancurve-amd.service
 sudo chmod 644 /etc/systemd/system/nfancurve-amd.service
 sudo nano /etc/systemd/system/nfancurve-amd.service
 ```
