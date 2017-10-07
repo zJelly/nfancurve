@@ -23,7 +23,7 @@ add the following to `/etc/systemd/system/nfancurve-amd.service`
 Description=Run nfancurve-amd automatically
 
 [Service]
-Type=simple
+Type=idle
 RemainAfterExit=false
 ExecStart=/etc/nfancurve-amd/temp.sh
 
